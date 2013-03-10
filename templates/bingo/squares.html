@@ -2,7 +2,42 @@
 {% block content %}
 
 {% for square in squares %}
-* {{ square.text }} <br><a href="{% url 'bingo.views.deletesquare' square.pk %}">Delete this square</a><br><br>
+<div style="float:left;height:150px;width:150px;margin:1px;border:1px solid #bbb;-webkit-border-radius:4px;-moz-border-radius:4px;border-radius:4px;">
+  <a class="deletesquare" href="{% url 'bingo.views.deletesquare' square.pk %}" style="font-size:26;">&times;</a>
+  {{ square.text }}
+</div>
 {% endfor %}
+
+<div id="dialog-confirm" style="display:hidden;" title="Delete this square?">
+  <p><span class="ui-icon ui-icon-alert" style="float: left; margin: 0 7px 20px 0;"></span>This square will be deleted and removed from all player's boards. Are you sure?</p>
+</div>
+
+
+<script>
+  $(function() {
+    $( "#dialog-confirm" ).dialog({
+      autoOpen: false,
+      resizable: false,
+      height:300,
+      modal: true     
+    });
+    $(".deletesquare").click(function(e){
+      e.preventDefault();
+      var targetUrl = $(this).attr("href");
+      $("#dialog-confirm").dialog({
+        buttons : {
+          "Delete" : function() {
+            window.location.href = targetUrl;
+          },
+          "Cancel" : function() {
+            $(this).dialog("close");
+          }
+        }
+      });
+
+      $("#dialog-confirm").dialog("open");
+    });
+  });
+</script>
 
 {% endblock %}

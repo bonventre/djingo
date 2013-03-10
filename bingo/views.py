@@ -139,7 +139,7 @@ def deletesquare(request,squareid):
         boardsquare.checked = True
       boardsquare.save()
     square.delete()
-    return HttpResponse("Square deleted")
+    return HttpResponseRedirect(reverse('bingo.views.allsquares'))
 
 def deleteplayer(request,playerid):
   player = get_object_or_404(Player,pk=playerid)

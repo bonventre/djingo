@@ -1,8 +1,6 @@
 .checked{
   background: red;
-  border: 1px solid black;
 }
 
 .unchecked{
-  border: 1px solid black;
 }
