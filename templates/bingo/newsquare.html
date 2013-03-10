@@ -1,0 +1,7 @@
+{% if success %}
+Successfully added a new square!<br><br>
+{% endif %}
+<form action="{% url bingo.views.newsquare %}" method="post">{% csrf_token %}
+  {{ form.as_p }}
+  <p><input type="submit" value="Add Square" /></p>
+</form>
