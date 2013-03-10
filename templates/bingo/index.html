@@ -1,8 +1,8 @@
 {% for player in players %}
-<a href="{% url bingo.views.playerview player.id %}">{{ player.name }}</a>: {{ player.score }}/25<br>
+<a href="{% url 'bingo.views.playerview' player.id %}">{{ player.name }}</a>: {{ player.score }}/25<br>
 {% endfor %}
 <br>
 <br>
-<a href="{% url bingo.views.newplayer %}">Add a player</a><br>
-<a href="{% url bingo.views.newsquare %}">Add a square</a><br><br>
-<a href="{% url bingo.views.allsquares %}">View all squares</a>
+<a href="{% url 'bingo.views.newplayer' %}">Add a player</a><br>
+<a href="{% url 'bingo.views.newsquare' %}">Add a square</a><br><br>
+<a href="{% url 'bingo.views.allsquares' %}">View all squares</a>

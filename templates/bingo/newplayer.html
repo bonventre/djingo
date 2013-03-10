@@ -1,7 +1,7 @@
 {% if success %}
-Successfully added {{ name }}! See their board <a href="{% url bingo.views.playerview id %}">here</a><br><br>
+Successfully added {{ name }}! See their board <a href="{% url 'bingo.views.playerview' id %}">here</a><br><br>
 {% endif %}
-<form action="{% url bingo.views.newplayer %}" method="post">{% csrf_token %}
+<form action="{% url 'bingo.views.newplayer' %}" method="post">{% csrf_token %}
   {{ form.as_p }}
   <p><input type="submit" value="Add Player" /></p>
 </form>

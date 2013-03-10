@@ -14,12 +14,14 @@
         $(document).on('click','.unchecked',function(){
           $(this).removeClass("unchecked");
           $(this).addClass("checked");
-          $.post("{% url bingo.views.togglesquare %}",{boardsquare:$(this).attr("id")},
+          $.post("{% url 'bingo.views.togglesquare' %}",{boardsquare:$(this).attr("id")},
             function(data){
               console.log(data)
               $("#score").html(data.score + "/25");
               if (data.bingo){
                 $("#bingo").html("<h1>BINGO!!!!!</h1><br>");
+              }else{
+                $("#bingo").html("");
               }
               if (data.checked == 0){
                 $(this).removeClass("checked");
@@ -31,11 +33,13 @@
         $(document).on('click','.checked',function(){
           $(this).removeClass("checked");
           $(this).addClass("unchecked");
-          $.post("{% url bingo.views.togglesquare %}",{boardsquare:$(this).attr("id")},
+          $.post("{% url 'bingo.views.togglesquare' %}",{boardsquare:$(this).attr("id")},
             function(data){
               $("#score").html(data.score + "/25");
               if (data.bingo){
                 $("#bingo").html("<h1>BINGO!!!!!</h1><br>");
+              }else{
+                $("#bingo").html("");
               }
               if (data.checked == 1){
                 $(this).removeClass("unchecked");
