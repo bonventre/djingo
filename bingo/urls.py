@@ -7,4 +7,6 @@ urlpatterns = patterns('',
     url(r'^newsquare/', 'bingo.views.newsquare'),
     url(r'^allsquares/', 'bingo.views.allsquares'),
     url(r'^togglesquare/', 'bingo.views.togglesquare'),
+    url(r'^deletesquare/(\d+)/$', 'bingo.views.deletesquare'),
+    url(r'^deleteplayer/(\d+)/$', 'bingo.views.deleteplayer'),
 )

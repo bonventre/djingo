@@ -1,3 +1,6 @@
+{% extends "bingo/base.html" %}
+{% block content %}
+
 {% if success %}
 Successfully added a new square!<br><br>
 {% endif %}
@@ -5,3 +8,4 @@ Successfully added a new square!<br><br>
   {{ form.as_p }}
   <p><input type="submit" value="Add Square" /></p>
 </form>
+{% endblock %}

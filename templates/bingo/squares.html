@@ -1,3 +1,8 @@
+{% extends "bingo/base.html" %}
+{% block content %}
+
 {% for square in squares %}
-* {{ square.text }} <br><a href="#">Delete this square</a><br><br>
+* {{ square.text }} <br><a href="{% url 'bingo.views.deletesquare' square.pk %}">Delete this square</a><br><br>
 {% endfor %}
+
+{% endblock %}

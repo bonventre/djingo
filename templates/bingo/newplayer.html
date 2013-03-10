@@ -1,3 +1,5 @@
+{% extends "bingo/base.html" %}
+{% block content %}
 {% if success %}
 Successfully added {{ name }}! See their board <a href="{% url 'bingo.views.playerview' id %}">here</a><br><br>
 {% endif %}
@@ -5,3 +7,4 @@ Successfully added {{ name }}! See their board <a href="{% url 'bingo.views.play
   {{ form.as_p }}
   <p><input type="submit" value="Add Player" /></p>
 </form>
+{% endblock %}

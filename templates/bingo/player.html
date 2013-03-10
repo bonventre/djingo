@@ -1,14 +1,27 @@
-<html>
-  <head>
-    <script src="{{ STATIC_URL }}/js/jquery-1.9.1.js"></script>
+    
+{% extends "bingo/base.html" %}
+{% block content %}
 
-    <link rel="stylesheet" href="{{ STATIC_URL }}/css/main.css" />
-    <script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-    <script src="http://code.jquery.com/ui/1.10.1/jquery-ui.js"></script>
-    <script src="{{ STATIC_URL }}/js/jquery.cookie.js"></script>
-    <script src="{{ STATIC_URL }}/js/jquery.form.js"></script>
-    <script src="{{ STATIC_URL }}/js/jquery.json-2.4.js"></script>
-    <script src="{{ STATIC_URL }}/js/jquery_csrf.js"></script>
+  <b>{{ player.name }}</b> <br><span id="score">{{score}}/25</span><br><br>
+    <div id="bingo">
+{% if player.bingo %}
+<h1>BINGO!!!!!</h1><br>
+{% endif %}
+</div>
+
+<div style="display:table;">
+  <div style="display:table-row;">
+{% for square in squares %}
+    <div style="display:table-cell;width:100px;height:100px;" id="{{ square.boardsquare }}" class="boardsquare {{square.classname}}">
+      {{ square.text }}<br>
+    </div>
+{% if forloop.counter0 == 4 or forloop.counter0 == 9 or forloop.counter0 == 14 or forloop.counter0 == 19 %}
+  </div>
+  <div style="display:table-row;">
+{% endif %}
+{% endfor %}
+  </div>
+</div>
     <script language="javascript">
       $(document).ready(function() {
         $(document).on('click','.unchecked',function(){
@@ -50,28 +63,5 @@
         });
       });
     </script>
-  </head>
-  <body>
 
-  <b>{{ player.name }}</b> <br><span id="score">{{score}}/25</span><br><br>
-    <div id="bingo">
-{% if player.bingo %}
-<h1>BINGO!!!!!</h1><br>
-{% endif %}
-</div>
-
-<div style="display:table;">
-  <div style="display:table-row;">
-{% for square in squares %}
-    <div style="display:table-cell;width:100px;height:100px;" id="{{ square.boardsquare }}" class="boardsquare {{square.classname}}">
-      {{ square.text }}<br>
-    </div>
-{% if forloop.counter0 == 4 or forloop.counter0 == 9 or forloop.counter0 == 14 or forloop.counter0 == 19 %}
-  </div>
-  <div style="display:table-row;">
-{% endif %}
-{% endfor %}
-  </div>
-</div>
-</body>
-</html>
+{% endblock %}

@@ -26,15 +26,14 @@ def playerview(request,playerid):
   for square in Boardsquare.objects.filter(player=player):
     if square.checked:
       score += 1
-  squares = Square.objects.filter(player=player).order_by('boardsquare__order')
+  boardsquares = Boardsquare.objects.filter(player=player).order_by('order')
   square_info = []
-  for square in squares:
-    boardsquare = Boardsquare.objects.get(player=player,square=square)
+  for boardsquare in boardsquares:
     if boardsquare.checked:
       classname = 'checked'
     else:
       classname = 'unchecked'
-    square_info.append({'text':square.text,'boardsquare':boardsquare.pk,'classname':classname})
+    square_info.append({'text':boardsquare.square.text,'boardsquare':boardsquare.pk,'classname':classname})
   return render(request, 'bingo/player.html', {'player': player, 'score': score, 'squares': square_info})
 
 def newplayer(request):
@@ -48,12 +47,20 @@ def newplayer(request):
       player = Player(name=cd['name'],bingo=False)
       player.save()
       totalsquares = Square.objects.count()
-      squarei = random.sample(range(2,totalsquares+1),25)
+      if totalsquares >= 25:
+        squarei = random.sample(range(2,totalsquares+1),24)
+      else:
+        squarei = []
+        for i in range(24):
+          squarei.append(random.randint(2,totalsquares))
       for i in range(25):
         if i == 12:
           spot = Boardsquare(player=player,square=Square.objects.get(pk=1),checked=True,order=i)
         else:
-          spot = Boardsquare(player=player,square=Square.objects.get(pk=squarei[i]),checked=False,order=i)
+          if i > 12:
+            spot = Boardsquare(player=player,square=Square.objects.get(pk=squarei[i-1]),checked=False,order=i)
+          else:
+            spot = Boardsquare(player=player,square=Square.objects.get(pk=squarei[i]),checked=False,order=i)
         spot.save()
       playerid = player.pk
       playername = player.name
@@ -102,3 +109,42 @@ def togglesquare(request):
     return HttpResponse(data, mimetype='application/json')
   else:
     raise Http404
+
+def deletesquare(request,squareid):
+    square = get_object_or_404(Square,pk=squareid)
+    boardsquares = Boardsquare.objects.filter(square=square)
+    for boardsquare in boardsquares:
+      board = Boardsquare.objects.filter(player=boardsquare.player)
+      squareids = [square.pk]
+      for spot in board:
+        squareids.append(spot.square.pk)
+      squareids = list(set(squareids))
+      squareids.sort()
+      totalsquares = Square.objects.count()
+      if (totalsquares-len(squareids)) > 1:
+        i = random.randint(2,totalsquares-len(squareids))
+        for j in squareids:
+          if i >= j:
+            i += 1
+      elif (totalsquares-1) > 1:
+        i = random.randint(2,totalsquares-1)
+        if i >= square.pk:
+          i += 1
+      else:
+        i = 1
+      boardsquare.square = Square.objects.get(pk=i)
+      if i != 1:
+        boardsquare.checked = False
+      else:
+        boardsquare.checked = True
+      boardsquare.save()
+    square.delete()
+    return HttpResponse("Square deleted")
+
+def deleteplayer(request,playerid):
+  player = get_object_or_404(Player,pk=playerid)
+  boardsquares = Boardsquare.objects.filter(player=player)
+  for boardsquare in boardsquares:
+    boardsquare.delete()
+  player.delete()
+  return HttpResponse("Player deleted")
