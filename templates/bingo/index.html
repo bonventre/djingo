@@ -2,6 +2,10 @@
 {% extends "bingo/base.html" %}
 {% block content %}
 {% for player in players %}
-<a href="{% url 'bingo.views.playerview' player.id %}">{{ player.name }}</a>: {{ player.score }}/25<br>
+<a href="{% url 'bingo.views.playerview' player.id %}">{{ player.name }}</a>: {{ player.score }}/25 
+{% if player.bingo %}
+<b> BINGO </b>
+{% endif %}
+<br>
 {% endfor %}
 {% endblock %}
