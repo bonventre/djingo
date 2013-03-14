@@ -29,7 +29,6 @@
           $(this).addClass("checked");
           $.post("{% url 'bingo.views.togglesquare' %}",{boardsquare:$(this).attr("id")},
             function(data){
-              console.log(data)
               $("#score").html(data.score + "/25");
               if (data.bingo){
                 $("#bingo").html("<h1>BINGO!!!!!</h1><br>");
