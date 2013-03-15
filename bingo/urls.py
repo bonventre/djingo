@@ -9,4 +9,5 @@ urlpatterns = patterns('',
     url(r'^togglesquare/', 'bingo.views.togglesquare'),
     url(r'^deletesquare/(\d+)/$', 'bingo.views.deletesquare'),
     url(r'^deleteplayer/(\d+)/$', 'bingo.views.deleteplayer'),
+    url(r'^cashinbingo/(\d+)/$', 'bingo.views.cashinbingo'),
 )
