@@ -5,10 +5,23 @@ class Square(models.Model):
 
 class Player(models.Model):
   name = models.CharField(max_length=50,unique=True) 
-  bingo = models.BooleanField()
   board = models.ManyToManyField(Square, through='Boardsquare')
+  stashed_bingos = models.IntegerField(default=0)
 
-  def checkforbingo(self):
+  @property
+  def score(self):
+    score = self.stashed_bingos*5
+    for square in Boardsquare.objects.filter(player=self,order__lt=25):
+      if square.checked:
+        score += 1
+    return score
+  
+  @property
+  def maxscore(self):
+    return 25+self.stashed_bingos*5
+
+  @property
+  def bingo(self):
     checked = []
     for boardsquare in Boardsquare.objects.filter(player=self).order_by('order'):
       if boardsquare.checked:
@@ -26,8 +39,18 @@ class Player(models.Model):
       if all(checked[i] == 1 for i in line):
         bingo = True
         break
-    self.bingo = bingo
-      
+    return bingo
+
+  @property
+  def bingos(self):
+    if self.bingo:
+      return self.stashed_bingos + 1
+    else:
+      return self.stashed_bingos
+
+ 
+
+        
 
 class Boardsquare(models.Model):
   player = models.ForeignKey(Player)

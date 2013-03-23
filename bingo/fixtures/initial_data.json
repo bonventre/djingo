@@ -1,0 +1,9 @@
+[
+{
+  "model": "bingo.square",
+  "pk": 1,
+  "fields": {
+    "text": "Free Parking"
+  }
+}
+]

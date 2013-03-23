@@ -2,7 +2,7 @@
 {% extends "bingo/base.html" %}
 {% block content %}
 
-<b>{{ player.name }}</b> <br><span id="score">{{score}}/25 {% if bingo %}<b>Bingo x{{ bingo }}</b>{% endif %} </span><br><br>
+<b>{{ player.name }}</b> <br><span id="score">{{player.score}}/{{player.maxscore}} {% if player.bingos %}<b>Bingo x{{ player.bingos }}</b>{% endif %} </span><br><br>
     <div id="bingo">
 {% if player.bingo %}
 <h1>BINGO!!!!! <a href="{% url 'bingo.views.cashinbingo' player.pk %}">cash it in</a></h1><br>
@@ -33,49 +33,42 @@ Already completed:
 </div>
 <script language="javascript">
   $(document).ready(function() {
-    $(document).on('click','.unchecked',function(){
-      $(this).removeClass("unchecked");
-      $(this).addClass("checked");
-      $.post("{% url 'bingo.views.togglesquare' %}",{boardsquare:$(this).attr("id")},
-      function(data){
-        if (data.bingo){
+    function updatescorebingo(data){
+      if (data.bingo){
           $("#bingo").html("<h1>BINGO!!!!! <a href=\"{% url 'bingo.views.cashinbingo' player.pk %}\">cash it in</a></h1><br>");
         }else{
           $("#bingo").html("");
         }
-        if (data.bingonum){
-          $("#score").html(data.score + "/25 <b>Bingo x" + data.bingonum + "</b>"); 
+        if (data.bingos){
+          $("#score").html(data.score + "/" + data.maxscore + " <b>Bingo x" + data.bingos + "</b>"); 
         }else{
-          $("#score").html(data.score + "/25");
+          $("#score").html(data.score + "/" + data.maxscore);
         }
-        if (data.checked == 0){
-          $(this).removeClass("checked");
-          $(this).addClass("unchecked");
+    }
+    $(document).on('click','.unchecked',function(){
+      $(this).removeClass("unchecked");
+      $(this).addClass("checked");
+      $.post("{% url 'bingo.views.togglesquare' %}",{boardsquare:$(this).attr("id")},
+        function(data){
+          updatescorebingo(data);
+          if (data.checked == 0){
+            $(this).removeClass("checked");
+            $(this).addClass("unchecked");
+          }
         }
-      }
       );
     });
     $(document).on('click','.checked',function(){
       $(this).removeClass("checked");
       $(this).addClass("unchecked");
       $.post("{% url 'bingo.views.togglesquare' %}",{boardsquare:$(this).attr("id")},
-      function(data){
-        if (data.bingo){
-          $("#bingo").html("<h1>BINGO!!!!! <a href=\"{% url 'bingo.views.cashinbingo' player.pk %}\">cash it in</a></h1><br>");
-          }else{
-          $("#bingo").html("");
+        function(data){
+          updatescorebingo(data);
+          if (data.checked == 1){
+            $(this).removeClass("unchecked");
+            $(this).addClass("checked");
+          }
         }
-        if (data.bingonum){
-          $("#score").html(data.score + "/25 <b>Bingo x" + data.bingonum + "</b>"); 
-          }else{
-          $("#score").html(data.score + "/25");
-        }
-
-        if (data.checked == 1){
-          $(this).removeClass("unchecked");
-          $(this).addClass("checked");
-        }
-      }
       );
     });
   });

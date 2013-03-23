@@ -8,31 +8,14 @@ from forms import NewPlayerForm, NewSquareForm
 import random
 import simplejson as json
 
-def getscore(player):
-  score = 0
-  bingo = 0
-  for square in Boardsquare.objects.filter(player=player):
-    if square.checked:
-      score += 1
-    if square.order > 25:
-      bingo += 1
-  if player.bingo:
-    bingo += 5
-  return score + bingo*1000
-
 def main(request):
-  players = Player.objects.all().order_by('-bingo')
-  player_info = []
-  for player in players:
-    score = getscore(player)
-    player_info.append({'name':player.name,'id':player.pk,'score':score%1000,'bingo':int(score/5000)})
-    player_info = sorted(player_info,key=lambda player: player['bingo']*-5000-player['score']) 
+  players = Player.objects.all()
+  players = sorted(players,key=lambda player: player.bingos*-5000-player.score) 
 
-  return render(request, 'bingo/index.html', {'players':player_info})
+  return render(request, 'bingo/index.html', {'players':players})
 
 def playerview(request,playerid):
   player = get_object_or_404(Player,pk=int(playerid))
-  score = getscore(player)
   boardsquares = Boardsquare.objects.filter(player=player).order_by('order')
   square_info = []
   bingo_info = []
@@ -45,7 +28,7 @@ def playerview(request,playerid):
       square_info.append({'text':boardsquare.square.text,'boardsquare':boardsquare.pk,'classname':classname})
     else:
       bingo_info.append({'text':boardsquare.square.text,'boardsquare':boardsquare.pk,'classname':classname})
-  return render(request, 'bingo/player.html', {'player': player,'score': score%1000,'bingo':int(score/5000),'squares': square_info,'bingosquares':bingo_info})
+  return render(request, 'bingo/player.html', {'player': player,'squares': square_info,'bingosquares':bingo_info})
 
 def newplayer(request):
   success = 0
@@ -55,28 +38,26 @@ def newplayer(request):
     form = NewPlayerForm(request.POST)
     if form.is_valid():
       cd = form.cleaned_data
-      player = Player(name=cd['name'],bingo=False)
+      player = Player(name=cd['name'])
       player.save()
-      totalsquares = Square.objects.count()
-      if totalsquares >= 25:
-        squarei = random.sample(range(2,totalsquares+1),24)
+      squares = Square.objects.all().order_by('pk')
+      if len(squares)-1 >= 24:
+        squarei = random.sample(range(1,len(squares)),24)
+      elif len(squares)-1 > 0:
+        squarei = []
+        for i in range(24):
+          squarei.append(random.randint(1,len(squares)-1))
       else:
         squarei = []
-        if totalsquares > 1:
-          for i in range(24):
-            squarei.append(random.randint(2,totalsquares))
-        else:
-          for i in range(24):
-            squarei.append(1)
-      squares = Square.objects.all().order_by('pk')
+        for i in range(24):
+          squarei.append(0)
       for i in range(25):
-        if i == 12:
-          spot = Boardsquare(player=player,square=Square.objects.get(pk=1),checked=True,order=i)
+        if i < 12:
+          spot = Boardsquare(player=player,square=squares[squarei[i]],checked=False,order=i)
+        elif i == 12:
+          spot = Boardsquare(player=player,square=squares[0],checked=True,order=i)
         else:
-          if i > 12:
-            spot = Boardsquare(player=player,square=squares[squarei[i-1]-1],checked=False,order=i)
-          else:
-            spot = Boardsquare(player=player,square=squares[squarei[i]-1],checked=False,order=i)
+          spot = Boardsquare(player=player,square=squares[squarei[i-1]],checked=False,order=i)
         spot.save()
       playerid = player.pk
       playername = player.name
@@ -113,12 +94,10 @@ def togglesquare(request):
       data = {'checked': 1}
     boardsquare.save()
     player = Player.objects.get(pk=boardsquare.player.pk)
-    player.checkforbingo()
-    player.save()
-    score = getscore(player)
-    data['bingonum'] = int(score/5000)
+    data['bingos'] = player.bingos
     data['bingo'] = player.bingo
-    data['score'] = score%1000
+    data['score'] = player.score
+    data['maxscore'] = player.maxscore
     data = json.dumps(data)
     return HttpResponse(data, mimetype='application/json')
   else:
@@ -131,18 +110,17 @@ def cashinbingo(request,playerid):
   else:
     checked = []
     squares = Square.objects.all().order_by('pk')
-    squareids = []
+    newsquares = list(Square.objects.filter(pk__gt=1).order_by('pk'))
     boardsquares = Boardsquare.objects.filter(player=player).order_by('order')
     for boardsquare in boardsquares:
-      squareids.append(boardsquare.square.pk)
+      while boardsquare.square in newsquares:
+        newsquares.remove(boardsquare.square)
       if boardsquare.checked:
         checked.append(1)
       else:
         checked.append(0)
 
-    squareids = list(set(squareids))
-    squareids.sort()
-    totalsquares = Square.objects.count()
+    #totalsquares = Square.objects.count()
     lines = []
     for i in range(5):
       lines.append([5*i,5*i+1,5*i+2,5*i+3,5*i+4])
@@ -153,31 +131,25 @@ def cashinbingo(request,playerid):
       if all(checked[i] == 1 for i in line):
         for pos in line:
           order = boardsquares[pos].order
-          if (totalsquares-len(squareids)) > 1:
-            i = random.randint(0,totalsquares-len(squareids)-2)
-            for j in squareids:
-              if squares[i] >= j:
-                i += 1
-          elif (totalsquares-1) > 1:
-            i = random.randint(1,totalsquares-2)
+          if len(newsquares) > 0:
+            i = random.randint(0,len(newsquares)-1)
+            newsquare = Boardsquare(player=player,square=newsquares[i],order=order,checked=False)
+            newsquares.remove(newsquares[i])
+          elif len(squares)-1 > 0:
+            i = random.randint(1,len(squares)-1)
+            newsquare = Boardsquare(player=player,square=squares[i],order=order,checked=False)
           else:
-            i = 0
-          newsquare = Boardsquare(player=player,square=squares[i],order=order,checked=False)
-          squareids.append(squares[i].pk)
-          squareids = list(set(squareids))
-          squareids.sort()
+            newsquare = Boardsquare(player=player,square=squares[0],order=order,checked=False)
           boardsquares[pos].order = 100
           boardsquares[pos].save()
           newsquare.save()
         break
 
-    score = getscore(player)
-    player.checkforbingo()
+    player.stashed_bingos += 1
     player.save()
     return HttpResponseRedirect(reverse('bingo.views.playerview',args=(playerid,)))
 
 def deletesquare(request,squareid):
-    import pdb;pdb.set_trace()
     square = get_object_or_404(Square,pk=squareid)
     squares = Square.objects.all().order_by('pk')
     boardsquares = Boardsquare.objects.filter(square=square)
@@ -189,28 +161,21 @@ def deletesquare(request,squareid):
       else:
         # get the other boardsquares on the board containing this one
         board = Boardsquare.objects.filter(player=boardsquare.player)
-        squarepks = [square.pk]
+        newsquares = list(Square.objects.filter(pk__gt=1).order_by('pk'))
         for spot in board:
-          squarepks.append(spot.square.pk)
-        squarepks = list(set(squarepks))
-        squarepks.sort()
-        totalsquares = Square.objects.count()
-        if (totalsquares-len(squarepks)) > 1:
-          i = random.randint(0,totalsquares-len(squarepks)-2)
-          for j in squarepks:
-            if squares[i].pk >= j:
-              i += 1
-        elif (totalsquares-1) > 1:
-          i = random.randint(1,totalsquares-2)
-          if squares[i] >= square.pk:
-            i += 1
+          while spot.square in newsquares:
+            newsquares.remove(spot.square)
+        if len(newsquares) > 0:
+          i = random.randint(0,len(newsquares)-1)
+          boardsquare.square = newsquares[i]
+          newsquares.remove(newsquares[i])
+        elif len(squares)-1 > 0:
+          i = random.randint(1,len(squares)-1)
+          boardsquare.square = squares[i]
         else:
-          i = 0
-        boardsquare.square = squares[i]
+          boardsquare.square = squares[0]
         boardsquare.checked = False
-      boardsquare.save()
-      boardsquare.player.checkforbingo()
-      boardsquare.player.save()
+        boardsquare.save()
 
     square.delete()
     return HttpResponseRedirect(reverse('bingo.views.allsquares'))
